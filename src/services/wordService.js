@@ -24,7 +24,7 @@ export const saveWordProgress = async ({
   .replace(/\s+/g, "-");
 
   const docId = `${userId}_${wordKey}`;
-
+  
 
   const docRef = doc(
     db,
