@@ -1,10 +1,12 @@
 import {
-  addDoc,
+  doc,
+  setDoc,
+  getDoc,
   collection,
-  serverTimestamp,
   query,
   where,
   getDocs,
+  serverTimestamp,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -15,16 +17,67 @@ export const saveWordProgress = async ({
   meaning,
   status,
 }) => {
-  await addDoc(
-    collection(db, "userWords"),
+
+  const wordKey = word
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, "-");
+
+  const docId = `${userId}_${wordKey}`;
+
+
+  const docRef = doc(
+    db,
+    "userWords",
+    docId
+  );
+
+  const existingDoc =
+    await getDoc(docRef);
+
+  let reviewCount = 1;
+  let interval = 1;
+
+  if (existingDoc.exists()) {
+
+    const data = existingDoc.data();
+
+    reviewCount =
+      data.reviewCount + 1;
+
+    interval =
+      status === "known"
+        ? Math.min(
+            data.interval * 2,
+            30
+          )
+        : 1;
+  }
+
+  const nextReview = new Date();
+
+  nextReview.setDate(
+    nextReview.getDate() + interval
+  );
+
+  await setDoc(
+    docRef,
     {
       userId,
       word,
       meaning,
+
       status,
-      reviewCount:
-        status === "known" ? 1 : 0,
-      createdAt: serverTimestamp(),
+
+      reviewCount,
+
+      interval,
+
+      lastReviewed:
+        serverTimestamp(),
+
+      nextReviewDate:
+        nextReview,
     }
   );
 };
