@@ -7,9 +7,62 @@ import {
   where,
   getDocs,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
+
+// export const getWordsDueToday = async (userId) => {
+//   const today = Timestamp.fromDate(new Date());
+
+//   const q = query(
+//     collection(db, "userWords"),
+//     where("userId", "==", userId),
+//     where("nextReviewDate", "<=", today)
+//   );
+
+//   const snapshot = await getDocs(q);
+
+//   const words = [];
+
+//   snapshot.forEach((doc) => {
+//     words.push({
+//       id: doc.id,
+//       ...doc.data(),
+//     });
+//   });
+
+//   return words;
+// };
+
+export const getWordsDueToday = async (userId) => {
+  const today = Timestamp.fromDate(new Date());
+
+  console.log("Today:", today.toDate());
+
+  const q = query(
+    collection(db, "userWords"),
+    where("userId", "==", userId),
+    where("nextReviewDate", "<=", today)
+  );
+
+  const snapshot = await getDocs(q);
+
+  console.log("Documents found:", snapshot.size);
+
+  const words = [];
+
+  snapshot.forEach((doc) => {
+    console.log(doc.id, doc.data());
+
+    words.push({
+      id: doc.id,
+      ...doc.data(),
+    });
+  });
+
+  return words;
+};
 
 export const saveWordProgress = async ({
   userId,
